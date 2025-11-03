@@ -57,10 +57,6 @@ export default async function deployScript(deployOptions: DeployOptions) {
   );
   const rewardTokenDataAddress = rewardTokenData.address;
 
-  console.log(
-    `stakingToken address: ${stakingTokenAddress}, rewardToken address: ${rewardTokenDataAddress}`,
-  );
-
   await deployStylusContract({
     contract: "erc20-staking",
     name: "ERC20Staking",
