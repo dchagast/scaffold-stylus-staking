@@ -17,18 +17,18 @@ const ERC20Page: NextPage = () => {
   const [transferAmount, setTransferAmount] = useState<string>("0");
 
   const { data: totalSupply, isLoading: isTotalSupplyLoading } = useScaffoldReadContract({
-    contractName: "erc20-example",
+    contractName: "StakingToken",
     functionName: "totalSupply",
   });
 
   const { data: userBalance, isLoading: isUserBalanceLoading } = useScaffoldReadContract({
-    contractName: "erc20-example",
+    contractName: "StakingToken",
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
   const { writeContractAsync: executeErc20Func } = useScaffoldWriteContract({
-    contractName: "erc20-example",
+    contractName: "StakingToken",
   });
 
   const handleMint = () => {

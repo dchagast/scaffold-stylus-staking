@@ -3,6 +3,7 @@ import {
   getDeploymentConfig,
   getRpcUrlFromChain,
   printDeployedAddresses,
+  getContractData,
 } from "./utils/";
 import { DeployOptions } from "./utils/type";
 import { config as dotenvConfig } from "dotenv";
@@ -29,25 +30,46 @@ export default async function deployScript(deployOptions: DeployOptions) {
   console.log(`📁 Deployment directory: ${config.deploymentDir}`);
   console.log(`\n`);
 
-  // Deploy a single contract
-  // await deployStylusContract({
-  //   contract: "your-contract",
-  //   constructorArgs: [config.deployerAddress!],
-  //   ...deployOptions,
-  // });
-
-  /// Deploy your contract with a custom name
-  // await deployStylusContract({
-  //   contract: "your-contract",
-  //   constructorArgs: [config.deployerAddress],
-  //   name: "my-contract",
-  //   ...deployOptions,
-  // });
+  // deploy staking token
+  await deployStylusContract({
+    contract: "erc20-example",
+    name: "StakingToken",
+    constructorArgs: ["StakingToken", "ST", "1000000000000000000000000"],
+    ...deployOptions,
+  });
 
   await deployStylusContract({
     contract: "erc20-example",
-    name: "erc20-example",
-    constructorArgs: ["Erc20Example", "EXAMPLE", "1000000000000000000000000"],
+    name: "RewardToken",
+    constructorArgs: ["RewardToken", "RT", "1000000000000000000000000"],
+    ...deployOptions,
+  });
+
+  const stakingTokenData = getContractData(
+    config.chain.id.toString(),
+    "StakingToken",
+  );
+  const stakingTokenAddress = stakingTokenData.address;
+
+  const rewardTokenData = getContractData(
+    config.chain.id.toString(),
+    "RewardToken",
+  );
+  const rewardTokenDataAddress = rewardTokenData.address;
+
+  console.log(
+    `stakingToken address: ${stakingTokenAddress}, rewardToken address: ${rewardTokenDataAddress}`,
+  );
+
+  await deployStylusContract({
+    contract: "erc20-staking",
+    name: "ERC20Staking",
+    constructorArgs: [
+      stakingTokenAddress, // stakingTokenAddress,
+      rewardTokenDataAddress, // rewardTokenDataAddress,
+      10, // 1%
+    ],
+
     ...deployOptions,
   });
 
