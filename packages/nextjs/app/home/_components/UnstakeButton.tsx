@@ -7,7 +7,13 @@ import { useAccount } from "wagmi";
 import { ActionButton } from "./ActionButton";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
-export const UnstakeButton = ({ pendingRewards }: { pendingRewards: bigint }) => {
+export const UnstakeButton = ({
+  afterUnstake,
+  pendingRewards,
+}: {
+  pendingRewards: bigint;
+  afterUnstake: () => void;
+}) => {
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === "dark";
 
@@ -28,6 +34,8 @@ export const UnstakeButton = ({ pendingRewards }: { pendingRewards: bigint }) =>
             functionName: "unstake",
             args: [walletAddress],
           });
+
+          await afterUnstake();
         } catch (e) {
           console.error("failed while unstaking:", e);
         }

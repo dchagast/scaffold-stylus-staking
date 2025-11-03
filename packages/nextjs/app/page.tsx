@@ -25,12 +25,16 @@ const Home: NextPage = () => {
   const isDarkMode = resolvedTheme === "dark";
 
   // Read user balances
-  const { data: balance, isLoading: isBalanceLoading } = useScaffoldReadContract({
+  const {
+    data: stakingTokenBalance,
+    isLoading: isStakingTokenBalanceLoading,
+    refetch: refetchStakingTokenBalance,
+  } = useScaffoldReadContract({
     contractName: "StakingToken",
     functionName: "balanceOf",
     args: [walletAddress],
   });
-  const maxVal = balance || BigInt(0);
+  const maxVal = stakingTokenBalance || BigInt(0);
 
   const { data: userStakeInfo } = useScaffoldReadContract({
     contractName: "ERC20Staking",
@@ -61,11 +65,20 @@ const Home: NextPage = () => {
     functionName: "symbol",
   });
 
-  const { data: rewards, isLoading: isRewardsLoading } = useScaffoldReadContract({
+  const {
+    data: rewardTokenBalance,
+    isLoading: isRewardTokenBalanceLoading,
+    refetch: refetchRewardTokenBalance,
+  } = useScaffoldReadContract({
     contractName: "RewardToken",
     functionName: "balanceOf",
     args: [walletAddress],
   });
+
+  const refetchQueries = async () => {
+    await refetchRewardTokenBalance();
+    await refetchStakingTokenBalance();
+  };
 
   const handleInputChange = (valueString: string) => {
     if (valueString === "") {
@@ -104,25 +117,25 @@ const Home: NextPage = () => {
               <BalanceItem
                 label="Staking Token Balance"
                 value={
-                  isBalanceLoading
+                  isStakingTokenBalanceLoading
                     ? "Loading..."
-                    : formatTokenBalanceStr(balance, stakingTokenDecimals, stakingTokenSymbol)
+                    : formatTokenBalanceStr(stakingTokenBalance, stakingTokenDecimals, stakingTokenSymbol)
                 }
                 dark={isDarkMode}
               />
               <BalanceItem
                 label="Reward Token Balance"
                 value={
-                  isRewardsLoading
+                  isRewardTokenBalanceLoading
                     ? "Loading..."
-                    : formatTokenBalanceStr(rewards, rewardTokenDecimals, rewardTokenSymbol)
+                    : formatTokenBalanceStr(rewardTokenBalance, rewardTokenDecimals, rewardTokenSymbol)
                 }
                 dark={isDarkMode}
               />
               <BalanceItem
                 label="Staked Balance"
                 value={
-                  isBalanceLoading
+                  isStakingTokenBalanceLoading
                     ? "Loading..."
                     : formatTokenBalanceStr(stakedTokens, rewardTokenDecimals, rewardTokenSymbol)
                 }
@@ -131,7 +144,7 @@ const Home: NextPage = () => {
               <BalanceItem
                 label="Pending Reward"
                 value={
-                  isRewardsLoading
+                  isRewardTokenBalanceLoading
                     ? "Loading..."
                     : formatTokenBalanceStr(pendingRewards, rewardTokenDecimals, rewardTokenSymbol)
                 }
@@ -166,15 +179,21 @@ const Home: NextPage = () => {
             onChange={(e: any) => {
               handleInputChange(e.target.value);
             }}
-            placeholder={`Enter amount to stake, max balance: ${Number(maxVal) / 10 ** Number(stakingTokenDecimals)}`}
+            placeholder={`Enter amount to stake, max stakingTokenBalance: ${Number(maxVal) / 10 ** Number(stakingTokenDecimals)}`}
             type="number"
             min="0"
           />
 
           <div className="grid grid-cols-2 gap-4 mt-2">
-            <StakeButton error={error} maxAmount={maxVal} stakeAmount={stakeAmount} isDarkMode={isDarkMode} />
+            <StakeButton
+              afterStake={refetchQueries}
+              error={error}
+              maxAmount={maxVal}
+              stakeAmount={stakeAmount}
+              isDarkMode={isDarkMode}
+            />
 
-            <UnstakeButton pendingRewards={pendingRewards || 0n} />
+            <UnstakeButton afterUnstake={refetchQueries} pendingRewards={pendingRewards || 0n} />
           </div>
         </div>
       </div>

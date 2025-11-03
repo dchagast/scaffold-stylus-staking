@@ -10,11 +10,13 @@ export const StakeButton = ({
   maxAmount,
   stakeAmount,
   isDarkMode,
+  afterStake,
 }: {
   error: boolean;
   stakeAmount: bigint;
   maxAmount: bigint;
   isDarkMode: boolean;
+  afterStake: () => void;
 }) => {
   const { address: walletAddress } = useAccount();
   const { data: stakingContractData } = useDeployedContractInfo({
@@ -81,6 +83,8 @@ export const StakeButton = ({
             functionName: "stake",
             args: [stakeAmount],
           });
+
+          await afterStake();
         } catch (e) {
           console.error("failed while approving:", e);
         }
