@@ -26,7 +26,7 @@ export const StakingInfo = ({ rewardTokenSymbol, rewardTokenDecimals }: Props) =
     functionName: "configuration",
   });
 
-  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo({
+  const { data: deployedContractData } = useDeployedContractInfo({
     contractName: "ERC20Staking",
   });
 

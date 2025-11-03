@@ -21,19 +21,13 @@ export const StakeButton = ({
     contractName: "ERC20Staking",
   });
 
-  const {
-    data: allowance,
-    isLoading: isAllowanceLoading,
-    refetch: refetchAllowanceQuery,
-  } = useScaffoldReadContract({
+  const { data: allowance, refetch: refetchAllowanceQuery } = useScaffoldReadContract({
     contractName: "StakingToken",
     functionName: "allowance",
     args: [walletAddress, stakingContractData?.address],
   });
   const allowanceBal = allowance || 0n;
   const isApproved = allowanceBal > 0n && allowanceBal >= stakeAmount;
-
-  console.log(`====> allowance: ${allowance}, stakeAmount: ${stakeAmount}`);
 
   const { writeContractAsync: stakingTokenContractAsync } = useScaffoldWriteContract({
     contractName: "StakingToken",

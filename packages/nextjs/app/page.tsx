@@ -25,11 +25,7 @@ const Home: NextPage = () => {
   const isDarkMode = resolvedTheme === "dark";
 
   // Read user balances
-  const {
-    data: balance,
-    isLoading: isBalanceLoading,
-    refetch: refetchBalanceQuery,
-  } = useScaffoldReadContract({
+  const { data: balance, isLoading: isBalanceLoading } = useScaffoldReadContract({
     contractName: "StakingToken",
     functionName: "balanceOf",
     args: [walletAddress],
