@@ -3,91 +3,186 @@
 import type { NextPage } from "next";
 import { useTheme } from "next-themes";
 import { useAccount } from "wagmi";
-import { Card } from "~~/components/Card";
+import { useState } from "react";
+
 import { Address } from "~~/components/scaffold-eth";
-import CompassIcon from "~~/icons/CompassIcon";
-import DarkBugAntIcon from "~~/icons/DarkBugAntIcon";
-import LightBugAntIcon from "~~/icons/LightBugAntIcon";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { BalanceItem } from "./home/_components/BalanceItem";
+import { StakeButton } from "./home/_components/StakeButton";
+import { UnstakeButton } from "./home/_components/UnstakeButton";
+import { SectionCard } from "./home/_components/SectionCard";
+import { InfoRow } from "./home/_components/InfoRow";
+import { StakingInfo } from "./home/_components/StakingInfo";
+import { formatTokenBalanceStr } from "~~/utils/format";
 
 const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+  const [stakeValue, setStakeValue] = useState("");
+  const [stakeAmount, setStakeAmount] = useState<bigint>(0n);
+  const [error, setError] = useState(false);
+
+  const { address: walletAddress } = useAccount();
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === "dark";
 
-  return (
-    <>
-      <div className="flex items-center flex-col justify-between flex-grow pt-10">
-        <div className="flex flex-col justify-center flex-grow">
-          <div className="px-5">
-            <h1 className="text-center">
-              <span className="block text-2xl mb-2">Welcome to</span>
-              <span className="block text-4xl font-bold">Scaffold-Stylus</span>
-            </h1>
-            <div className="flex justify-center items-center space-x-2 my-4">
-              <p className={`my-2 font-medium ${!isDarkMode ? "text-[#E3066E]" : ""}`}>Connected Address:</p>
-              <Address address={connectedAddress} />
-            </div>
-            <p className="text-center text-lg">
-              Get started by editing{" "}
-              <code
-                className="italic bg-base-300 text-black text-base font-bold max-w-full break-words break-all inline-block"
-                style={{
-                  backgroundColor: isDarkMode ? "white" : "#F0F0F0",
-                }}
-              >
-                packages/nextjs/app/page.tsx
-              </code>
-            </p>
-            <p className="text-center text-lg">
-              Edit your smart contract{" "}
-              <code
-                className="italic bg-base-300 text-black text-base font-bold max-w-full break-words break-all inline-block"
-                style={{
-                  backgroundColor: isDarkMode ? "white" : "#F0F0F0",
-                }}
-              >
-                lib.rs
-              </code>{" "}
-              in{" "}
-              <code
-                className="italic bg-base-300 text-black text-base font-bold max-w-full break-words break-all inline-block"
-                style={{
-                  backgroundColor: isDarkMode ? "white" : "#F0F0F0",
-                }}
-              >
-                packages/stylus/your-contract/src
-              </code>
-            </p>
-          </div>
-        </div>
+  // Read user balances
+  const {
+    data: balance,
+    isLoading: isBalanceLoading,
+    refetch: refetchBalanceQuery,
+  } = useScaffoldReadContract({
+    contractName: "StakingToken",
+    functionName: "balanceOf",
+    args: [walletAddress],
+  });
+  const maxVal = balance || BigInt(0);
 
-        <div
-          className="h-auto sm:h-[306px] mb-3 w-full py-11"
-          style={{
-            backgroundColor: isDarkMode ? "#050505" : "white",
-          }}
-        >
-          <div className="flex justify-center items-center h-full gap-12 flex-col sm:flex-row">
-            {/* Debug Contracts Card */}
-            <Card
-              icon={isDarkMode ? <DarkBugAntIcon /> : <LightBugAntIcon />}
-              description={<>Tinker with your smart contract using the</>}
-              linkHref="/debug"
-              linkText="Debug Contracts"
-              isDarkMode={isDarkMode}
-            />
-            {/* Block Explorer Card */}
-            <Card
-              icon={<CompassIcon />}
-              description={<>Explore your local transactions with the</>}
-              linkHref="/blockexplorer"
-              linkText="Block Explorer"
-              isDarkMode={isDarkMode}
-            />
+  const { data: userStakeInfo } = useScaffoldReadContract({
+    contractName: "ERC20Staking",
+    functionName: "queryUserInfo",
+    args: [walletAddress],
+  });
+
+  const pendingRewards = userStakeInfo && userStakeInfo.length > 1 ? userStakeInfo[0] : 0n;
+  const stakedTokens = userStakeInfo && userStakeInfo.length > 1 ? userStakeInfo[1] : 0n;
+
+  const { data: stakingTokenDecimals } = useScaffoldReadContract({
+    contractName: "StakingToken",
+    functionName: "decimals",
+  });
+
+  const { data: stakingTokenSymbol } = useScaffoldReadContract({
+    contractName: "StakingToken",
+    functionName: "symbol",
+  });
+
+  const { data: rewardTokenDecimals } = useScaffoldReadContract({
+    contractName: "RewardToken",
+    functionName: "decimals",
+  });
+
+  const { data: rewardTokenSymbol } = useScaffoldReadContract({
+    contractName: "StakingToken",
+    functionName: "symbol",
+  });
+
+  const { data: rewards, isLoading: isRewardsLoading } = useScaffoldReadContract({
+    contractName: "RewardToken",
+    functionName: "balanceOf",
+    args: [walletAddress],
+  });
+
+  const handleInputChange = (valueString: string) => {
+    if (valueString === "") {
+      setStakeValue("");
+      setStakeAmount(0n);
+      return;
+    }
+
+    try {
+      const numValue = parseFloat(valueString);
+      const scaledValue = BigInt(Math.floor(numValue * 10 ** Number(stakingTokenDecimals)));
+
+      if (scaledValue <= maxVal) {
+        setStakeAmount(scaledValue);
+        setStakeValue(valueString);
+      }
+    } catch (e) {
+      console.error("Error in handleInputChange:", e);
+      setError(true);
+    }
+  };
+
+  return (
+    <div
+      className={`flex flex-col items-center min-h-screen px-6 py-10 ${
+        isDarkMode
+          ? "bg-gradient-to-b from-[#050505] via-[#0b0b0b] to-[#151515]"
+          : "bg-gradient-to-b from-[#f8fafc] via-[#ffffff] to-[#f1f5f9]"
+      }`}
+    >
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8">
+        <SectionCard title="User Overview" emoji="👤" isDarkMode={isDarkMode}>
+          <div className="flex flex-col gap-4">
+            <InfoRow label="Connected Wallet:" value={<Address address={walletAddress} />} dark={isDarkMode} />
+            <div className="grid grid-cols-2 gap-3">
+              <BalanceItem
+                label="Staking Token Balance"
+                value={
+                  isBalanceLoading
+                    ? "Loading..."
+                    : formatTokenBalanceStr(balance, stakingTokenDecimals, stakingTokenSymbol)
+                }
+                dark={isDarkMode}
+              />
+              <BalanceItem
+                label="Reward Token Balance"
+                value={
+                  isRewardsLoading
+                    ? "Loading..."
+                    : formatTokenBalanceStr(rewards, rewardTokenDecimals, rewardTokenSymbol)
+                }
+                dark={isDarkMode}
+              />
+              <BalanceItem
+                label="Staked Balance"
+                value={
+                  isBalanceLoading
+                    ? "Loading..."
+                    : formatTokenBalanceStr(stakedTokens, rewardTokenDecimals, rewardTokenSymbol)
+                }
+                dark={isDarkMode}
+              />
+              <BalanceItem
+                label="Pending Reward"
+                value={
+                  isRewardsLoading
+                    ? "Loading..."
+                    : formatTokenBalanceStr(pendingRewards, rewardTokenDecimals, rewardTokenSymbol)
+                }
+                dark={isDarkMode}
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        <StakingInfo rewardTokenDecimals={rewardTokenDecimals} rewardTokenSymbol={rewardTokenSymbol} />
+      </div>
+
+      <div
+        className={`w-full max-w-6xl mt-10 rounded-3xl border p-8 shadow-lg transition-all duration-300 ${
+          isDarkMode
+            ? "bg-[rgba(30,30,30,0.7)] border-[rgba(255,255,255,0.1)] backdrop-blur-xl"
+            : "bg-white border-gray-200"
+        }`}
+      >
+        <h2 className={`text-center text-2xl font-semibold mb-6 ${isDarkMode ? "text-[#30B4ED]" : "text-[#2563EB]"}`}>
+          💠 Stake / Unstake
+        </h2>
+
+        <div className="flex flex-col gap-4 max-w-lg mx-auto">
+          <input
+            className={`rounded-xl w-full border px-5 py-3 text-base focus:ring-2 focus:ring-[#30B4ED] outline-none transition-all ${
+              isDarkMode
+                ? "bg-[rgba(20,20,20,0.9)] border-gray-700 text-gray-100 placeholder-gray-500"
+                : "bg-gray-50 border-gray-300 text-gray-800 placeholder-gray-400"
+            }`}
+            value={stakeValue}
+            onChange={(e: any) => {
+              handleInputChange(e.target.value);
+            }}
+            placeholder={`Enter amount to stake, max balance: ${Number(maxVal) / 10 ** Number(stakingTokenDecimals)}`}
+            type="number"
+            min="0"
+          />
+
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <StakeButton error={error} maxAmount={maxVal} stakeAmount={stakeAmount} isDarkMode={isDarkMode} />
+
+            <UnstakeButton pendingRewards={pendingRewards || 0n} />
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
