@@ -50,14 +50,3 @@ staking `1000 tokens` gives `50 tokens` as reward (5%).
 - `Unstaked(address staker, address receiver, uint256 unstakeAmount, uint256 rewardsPaid)`
 
 ---
-
-## 🧰 Development
-
-This project was created using **scaffold-stylus**.  
-To build or deploy:
-
-```bash
-cargo stylus build
-stylus deploy --network arbitrum-sepolia
-
-```
