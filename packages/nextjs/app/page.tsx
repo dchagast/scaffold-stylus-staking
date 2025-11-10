@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { NextPage } from "next";
 import { useTheme } from "next-themes";
 import { useAccount } from "wagmi";
@@ -61,7 +62,7 @@ const Home: NextPage = () => {
   });
 
   const { data: rewardTokenSymbol } = useScaffoldReadContract({
-    contractName: "StakingToken",
+    contractName: "RewardToken",
     functionName: "symbol",
   });
 
@@ -137,7 +138,7 @@ const Home: NextPage = () => {
                 value={
                   isStakingTokenBalanceLoading
                     ? "Loading..."
-                    : formatTokenBalanceStr(stakedTokens, rewardTokenDecimals, rewardTokenSymbol)
+                    : formatTokenBalanceStr(stakedTokens, stakingTokenDecimals, stakingTokenSymbol)
                 }
                 dark={isDarkMode}
               />
@@ -169,32 +170,42 @@ const Home: NextPage = () => {
         </h2>
 
         <div className="flex flex-col gap-4 max-w-lg mx-auto">
-          <input
-            className={`rounded-xl w-full border px-5 py-3 text-base focus:ring-2 focus:ring-[#30B4ED] outline-none transition-all ${
-              isDarkMode
-                ? "bg-[rgba(20,20,20,0.9)] border-gray-700 text-gray-100 placeholder-gray-500"
-                : "bg-gray-50 border-gray-300 text-gray-800 placeholder-gray-400"
-            }`}
-            value={stakeValue}
-            onChange={(e: any) => {
-              handleInputChange(e.target.value);
-            }}
-            placeholder={`Enter amount to stake, max stakingTokenBalance: ${Number(maxVal) / 10 ** Number(stakingTokenDecimals)}`}
-            type="number"
-            min="0"
-          />
+          {stakingTokenBalance && stakingTokenBalance > 0n ? (
+            <>
+              <input
+                className={`rounded-xl w-full border px-5 py-3 text-base focus:ring-2 focus:ring-[#30B4ED] outline-none transition-all ${
+                  isDarkMode
+                    ? "bg-[rgba(20,20,20,0.9)] border-gray-700 text-gray-100 placeholder-gray-500"
+                    : "bg-gray-50 border-gray-300 text-gray-800 placeholder-gray-400"
+                }`}
+                value={stakeValue}
+                onChange={(e: any) => {
+                  handleInputChange(e.target.value);
+                }}
+                placeholder={`Enter amount to stake, max stakingTokenBalance: ${Number(maxVal) / 10 ** Number(stakingTokenDecimals)}`}
+                type="number"
+                min="0"
+              />
 
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <StakeButton
-              afterStake={refetchQueries}
-              error={error}
-              maxAmount={maxVal}
-              stakeAmount={stakeAmount}
-              isDarkMode={isDarkMode}
-            />
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <StakeButton
+                  afterStake={refetchQueries}
+                  error={error}
+                  maxAmount={maxVal}
+                  stakeAmount={stakeAmount}
+                  isDarkMode={isDarkMode}
+                />
 
-            <UnstakeButton afterUnstake={refetchQueries} pendingRewards={pendingRewards || 0n} />
-          </div>
+                <UnstakeButton afterUnstake={refetchQueries} pendingRewards={pendingRewards || 0n} />
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 mt-2">
+              <Link href="/debug" className="btn btn-primary">
+                Please mint some Staking tokens first
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
