@@ -15,6 +15,7 @@ sol_interface! {
     interface IERC20 {
         function balanceOf(address owner) external view returns (uint);
         function transferFrom(address from, address to, uint256 value) external;
+        function transfer(address to, uint256 value) external;
     }
 }
 
@@ -160,7 +161,6 @@ impl ERC20Staking {
 
     pub fn unstake(&mut self, to: Address) -> Result<(), Error> {
         let sender = self.vm().msg_sender();
-        let contract_addr = self.vm().contract_address();
 
         let staked_amount = self.user_staked_balance.get(sender);
         if staked_amount.is_zero() {
@@ -179,16 +179,14 @@ impl ERC20Staking {
 
 
         // Transfer stake + reward tokens
-        let _ = IERC20::new(self.staking_token.get()).transfer_from(
+        let _ = IERC20::new(self.staking_token.get()).transfer(
             &mut *self,
-            contract_addr,
             to,
             staked_amount
         );
 
-        let _ = IERC20::new(self.reward_token.get()).transfer_from(
+        let _ = IERC20::new(self.reward_token.get()).transfer(
             &mut *self,
-            contract_addr,
             to,
             reward_owed
         );

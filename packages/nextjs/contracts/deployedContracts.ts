@@ -1815,8 +1815,8 @@ const deployedContracts = {
       ],
     },
     ERC20Staking: {
-      address: "0x980a374761390ac93949bb7ab110c4a8e85eb084",
-      txHash: "0xd02ecca7b3bde676d1065e20ac0e92e50f22666b344d40eb1eae6094c89bcecd",
+      address: "0x9ef804a76797f356af0ba263b74812f389ba6b57",
+      txHash: "0x1c943a7b8912ab6a95c44cd0c788c5388cae287448f99275734c314f42fabc81",
       abi: [
         {
           inputs: [
