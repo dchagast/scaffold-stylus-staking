@@ -32,20 +32,17 @@ sol! {
     #[derive(Debug)]
     error NoActiveStake();
     #[derive(Debug)]
-    error ERC20TransferFailed(bytes reason);
+    error NoOwedReward();
     #[derive(Debug)]
-    error InsufficientRewardPool(uint256 deficit);
+    error ERC20TransferFailed(bytes string);
+    #[derive(Debug)]
+    error InsufficientRewardTokens(uint256 deficit);
     #[derive(Debug)]
     error ZeroRewardGenerated();
 
     // -------------------- Events --------------------
-    event Staked(address indexed staker, uint256 stakeAmount, uint256 rewardAccrued);
-    event Unstaked(
-        address indexed staker,
-        address indexed receiver,
-        uint256 unstakeAmount,
-        uint256 rewardsPaid
-    );
+    event STTokensStaked(address indexed staker, uint256 stakeAmount, uint256 rewardAccrued);
+    event STTokensUnstaked(address indexed staker, uint256 unstakeAmount, uint256 rewardsPaid);
 }
 
 #[derive(SolidityError, Debug)]
@@ -55,8 +52,9 @@ pub enum Error {
     InvalidRewardRate(InvalidRewardRate),
     InvalidStakeAmount(InvalidStakeAmount),
     NoActiveStake(NoActiveStake),
+    NoOwedReward(NoOwedReward),
     ERC20TransferFailed(ERC20TransferFailed),
-    InsufficientRewardPool(InsufficientRewardPool),
+    InsufficientRewardTokens(InsufficientRewardTokens),
     ZeroRewardGenerated(ZeroRewardGenerated),
 }
 
@@ -109,7 +107,7 @@ impl ERC20Staking {
         Ok(())
     }
 
-    pub fn stake(&mut self, amount: U256) -> Result<(), Error> {
+    pub fn stakeTokens(&mut self, amount: U256) -> Result<(), Error> {
         let sender = self.vm().msg_sender();
         let contract_addr = self.vm().contract_address();
 
@@ -129,7 +127,7 @@ impl ERC20Staking {
 
         if total_reserved > available_reward_balance {
             let deficit = total_reserved - available_reward_balance;
-            return Err(Error::InsufficientRewardPool(InsufficientRewardPool { deficit }));
+            return Err(Error::InsufficientRewardTokens(InsufficientRewardTokens { deficit }));
         }
 
         // Update accounting
@@ -150,7 +148,7 @@ impl ERC20Staking {
         );
 
         // Emit event
-        log(self.vm(), Staked {
+        log(self.vm(), STTokensStaked {
             staker: sender,
             stakeAmount: amount,
             rewardAccrued: reward
@@ -159,8 +157,9 @@ impl ERC20Staking {
         Ok(())
     }
 
-    pub fn unstake(&mut self, to: Address) -> Result<(), Error> {
+    pub fn unstakeTokens(&mut self) -> Result<(), Error> {
         let sender = self.vm().msg_sender();
+        let contract_addr = self.vm().contract_address();
 
         let staked_amount = self.user_staked_balance.get(sender);
         if staked_amount.is_zero() {
@@ -168,6 +167,22 @@ impl ERC20Staking {
         }
 
         let reward_owed = self.user_reward_balance.get(sender);
+        if reward_owed.is_zero() {
+            return Err(Error::NoOwedReward(NoOwedReward {}));
+        }
+
+        let available_reward_balance = IERC20::new(self.reward_token.get()).balance_of(&*self, contract_addr).unwrap();
+        if reward_owed > available_reward_balance || available_reward_balance.is_zero() {
+            return Err(Error::InsufficientRewardTokens(InsufficientRewardTokens { deficit: reward_owed - available_reward_balance }));
+        }
+
+        {
+            let _ = IERC20::new(self.reward_token.get()).transfer(&mut *self, sender, reward_owed);
+        }
+        {
+            let _ = IERC20::new(self.staking_token.get()).transfer(&mut *self, sender, staked_amount);
+        }
+        
 
         // Adjust global totals
         let updated_total = self.total_reserved_rewards.get() - reward_owed;
@@ -177,24 +192,9 @@ impl ERC20Staking {
         self.user_staked_balance.insert(sender, U256::ZERO);
         self.user_reward_balance.insert(sender, U256::ZERO);
 
-
-        // Transfer stake + reward tokens
-        let _ = IERC20::new(self.staking_token.get()).transfer(
-            &mut *self,
-            to,
-            staked_amount
-        );
-
-        let _ = IERC20::new(self.reward_token.get()).transfer(
-            &mut *self,
-            to,
-            reward_owed
-        );
-
         // Emit event
-        log(self.vm(), Unstaked {
+        log(self.vm(), STTokensUnstaked {
             staker: sender,
-            receiver: to,
             unstakeAmount: staked_amount,
             rewardsPaid: reward_owed
         });

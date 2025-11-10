@@ -80,7 +80,7 @@ export const StakeButton = ({
 
         try {
           await stakingContractAsync({
-            functionName: "stake",
+            functionName: "stakeTokens",
             args: [stakeAmount],
           });
 

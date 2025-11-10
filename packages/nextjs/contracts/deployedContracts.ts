@@ -1815,8 +1815,8 @@ const deployedContracts = {
       ],
     },
     ERC20Staking: {
-      address: "0x9ef804a76797f356af0ba263b74812f389ba6b57",
-      txHash: "0x1c943a7b8912ab6a95c44cd0c788c5388cae287448f99275734c314f42fabc81",
+      address: "0x83e4dbd561f91e09ff04466e49cb3ce0c04239a3",
+      txHash: "0x9eafde4a6016a83189db0fdb02ad42496a9a559e7164e94b005a4ccecb540fd8",
       abi: [
         {
           inputs: [
@@ -1837,7 +1837,7 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
-          name: "InsufficientRewardPool",
+          name: "InsufficientRewardTokens",
           type: "error",
         },
         {
@@ -1887,6 +1887,11 @@ const deployedContracts = {
         {
           inputs: [],
           name: "NoActiveStake",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "NoOwedReward",
           type: "error",
         },
         {
@@ -1964,20 +1969,14 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
-          name: "stake",
+          name: "stakeTokens",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
         },
         {
-          inputs: [
-            {
-              internalType: "address",
-              name: "to",
-              type: "address",
-            },
-          ],
-          name: "unstake",
+          inputs: [],
+          name: "unstakeTokens",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",

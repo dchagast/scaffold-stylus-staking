@@ -30,20 +30,20 @@ export default async function deployScript(deployOptions: DeployOptions) {
   console.log(`📁 Deployment directory: ${config.deploymentDir}`);
   console.log(`\n`);
 
-  // deploy staking token
-  await deployStylusContract({
-    contract: "erc20-example",
-    name: "StakingToken",
-    constructorArgs: ["StakingToken", "ST", "1000000000000000000000000"],
-    ...deployOptions,
-  });
+  // // deploy staking token
+  // await deployStylusContract({
+  //   contract: "erc20-example",
+  //   name: "StakingToken",
+  //   constructorArgs: ["StakingToken", "ST", "1000000000000000000000000"],
+  //   ...deployOptions,
+  // });
 
-  await deployStylusContract({
-    contract: "erc20-example",
-    name: "RewardToken",
-    constructorArgs: ["RewardToken", "RT", "1000000000000000000000000"],
-    ...deployOptions,
-  });
+  // await deployStylusContract({
+  //   contract: "erc20-example",
+  //   name: "RewardToken",
+  //   constructorArgs: ["RewardToken", "RT", "1000000000000000000000000"],
+  //   ...deployOptions,
+  // });
 
   const stakingTokenData = getContractData(
     config.chain.id.toString(),

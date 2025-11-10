@@ -22,7 +22,6 @@ export const UnstakeButton = ({
   });
 
   const [unstakeIsLoding, setUnstakeIsLoading] = useState(false);
-  const { address: walletAddress } = useAccount();
 
   return (
     <ActionButton
@@ -31,8 +30,7 @@ export const UnstakeButton = ({
 
         try {
           await stakingContractAsync({
-            functionName: "unstake",
-            args: [walletAddress],
+            functionName: "unstakeTokens",
           });
 
           await afterUnstake();

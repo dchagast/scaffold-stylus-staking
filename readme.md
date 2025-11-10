@@ -15,38 +15,16 @@ This contract allows users to stake tokens, earn rewards, and withdraw both thei
 
 ## ⚙️ Deployed Contracts (Arbitrum Sepolia)
 
-- **Staking Token:** [`0xcc55bada1f71a8a4d7e19042df42dd7521c2d516`](https://sepolia.arbiscan.io/address/0xcc55bada1f71a8a4d7e19042df42dd7521c2d516)
-- **Reward Token:** [`0x77d13f2fb80fd4ded92f41dba7d30de5a2a8f889`](https://sepolia.arbiscan.io/address/0x77d13f2fb80fd4ded92f41dba7d30de5a2a8f889)
-- **Staking Contract:** [`0x980a374761390ac93949bb7ab110c4a8e85eb084`](https://sepolia.arbiscan.io/address/0x980a374761390ac93949bb7ab110c4a8e85eb084)
-- **Deployer Address:** [`0x43e104859e33656cce410812638d81ba3138d5c9`](https://sepolia.arbiscan.io/address/0x43e104859e33656cce410812638d81ba3138d5c9)
+- **Staking Token:** [`0xcc55bAdA1F71A8a4D7e19042DF42Dd7521c2D516`](https://sepolia.arbiscan.io/address/0xcc55bAdA1F71A8a4D7e19042DF42Dd7521c2D516)
+- **Reward Token:** [`0x77d13F2Fb80fd4deD92F41DbA7d30de5A2a8F889`](https://sepolia.arbiscan.io/address/0x77d13f2fb80fd4ded92f41dba7d30de5a2a8f889)
+- **Staking Contract:** [`0x83e4DBD561f91E09FF04466e49cB3ce0c04239a3`](https://sepolia.arbiscan.io/address/0x83e4DBD561f91E09FF04466e49cB3ce0c04239a3)
 
 ---
 
-## 🧩 Key Functions
+## 🧩 User scenarios
 
-| Function                                                | Description                                                     |
-| ------------------------------------------------------- | --------------------------------------------------------------- |
-| `constructor(staking_token, reward_token, reward_rate)` | Initializes staking and reward tokens with a fixed reward rate. |
-| `stake(amount)`                                         | Stake tokens and accumulate rewards.                            |
-| `unstake(to)`                                           | Withdraw staked tokens and rewards.                             |
-| `query_user_info(owner)`                                | View user’s staked and reward balances.                         |
-| `configuration()`                                       | View current staking configuration.                             |
-
----
-
-## 🪄 Reward Formula
-
-reward = (stake_amount \* reward_rate) / reward_divisor
-
-Example:  
-If `reward_rate = 50` and `reward_divisor = 1000`,  
-staking `1000 tokens` gives `50 tokens` as reward (5%).
-
----
-
-## 🧾 Events
-
-- `Staked(address staker, uint256 stakeAmount, uint256 rewardAccrued)`
-- `Unstaked(address staker, address receiver, uint256 unstakeAmount, uint256 rewardsPaid)`
-
----
+- First, mint some RT tokens (reward tokens) to the ERC20 staking contract.
+- Next, mint some ST tokens (staking tokens) to test the staking feature.
+- Then, approve the ERC20 staking contract to spend your ST tokens.
+- After approval, click the “Stake” button (or call the stake function) to stake your ST tokens.
+- Finally, you can unstake your tokens at any time and receive both your ST tokens and earned RT rewards.
